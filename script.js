@@ -2,7 +2,6 @@ const number = document.querySelectorAll(".number");
 const display = document.querySelector(".display");
 const decimal = document.getElementById("decimal");
 const sign = ["*", "-", "+", "/"];
-let operate = [];
 number.forEach((btn) => {
   btn.addEventListener("click", () => {
     showOnDisplay(btn);
@@ -26,11 +25,9 @@ const showOnDisplay = (button) => {
       }
       display.innerText = display.innerText.slice(0, -1);
     } else if (button.value === "=") {
-      evaluateDisplay();
+      evaluate(display.innerText);
     } else if (sign.includes(button.value)) {
       let currentDisplay = display.innerText;
-      operate.append(currentDisplay);
-      operate.append(button.value);
       let lastInput = display.innerText.charAt(currentDisplay.length - 1);
       let nextInput = button.value;
       if (!sign.includes(lastInput) && sign.includes(nextInput)) {
@@ -45,12 +42,46 @@ const showOnDisplay = (button) => {
   }
 };
 
-const evaluateDisplay = () => {
+const evaluate = (expression) => {
+  const operators = ["+", "-", "*", "/"];
+  let currentNumber = "";
+  let currentOperator = "+";
   let result = 0;
-  for (let i = 0; i < operate.length; i++) {
-    if (!sign.includes(operate[i])) {
-      result += operate[i];
+
+  const processNumber = () => {
+    const num = parseFloat(currentNumber);
+    if (!isNaN(num)) {
+      if (currentOperator === "+") {
+        result += num;
+      } else if (currentOperator === "-") {
+        result -= num;
+      } else if (currentOperator === "*") {
+        result *= num;
+      } else if (currentOperator === "/") {
+        if (num === 0) {
+          throw new Error("Division by zero");
+        }
+        result = Math.round((result / num) * 100) / 100;
+      }
     } else {
+      throw new Error("Invalid number: " + currentNumber);
+    }
+    currentNumber = "";
+  };
+
+  for (let char of expression) {
+    if (operators.includes(char)) {
+      processNumber();
+      currentOperator = char;
+    } else if (char === " ") {
+      // Ignore spaces
+    } else {
+      currentNumber += char;
     }
   }
+
+  // Process the last number
+  processNumber();
+
+  display.innerText = result;
 };
